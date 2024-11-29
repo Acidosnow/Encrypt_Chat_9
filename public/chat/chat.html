@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Socket</title>
+    <link rel="stylesheet" href="/chat/chat-style.css" />
+  </head>
+  <body>
+    <header id="header">
+      <h1>Socket.io Chat</h1>
+    </header>
+    <section id="chatlog">
+      <ul id="messages"></ul>
+    </section>
+    <section id="textbox">
+      <form id="form" action="">
+        <input id="chat-input" autocomplete="off" /><button>Send</button>
+      </form>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script src="/chat/chat.js"></script>
+  </body>
+</html>
