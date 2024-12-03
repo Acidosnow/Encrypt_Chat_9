@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Socket.IO 채팅방</title>
     <style>
+        /* 기본 스타일 */
         body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
@@ -12,8 +13,18 @@
             display: flex; 
             flex-direction: column; 
             height: 100vh; 
+            background-color: #f4f7fa;
         }
-        #chat { 
+        #chatContainer, #roomContainer {
+            display: none; /* 초기에는 숨김 */
+            flex-direction: column;
+            flex: 1;
+            padding: 20px;
+        }
+        #roomContainer.active, #chatContainer.active {
+            display: flex; /* 활성화 시 표시 */
+        }
+        #chat {
             list-style: none; 
             margin: 0; 
             padding: 10px; 
@@ -21,26 +32,36 @@
             overflow-y: scroll; 
             border: 1px solid #ccc; 
             background-color: #f9f9f9; 
+            display: flex;
+            flex-direction: column;
         }
         #chat li { 
             padding: 10px; 
             max-width: 60%; 
-            clear: both; 
             margin-bottom: 15px; 
             border-radius: 10px; 
             display: flex;
             flex-direction: column;
-            position: relative;
+        }
+        /* 시스템 알림 메시지 스타일 */
+        #chat li.notification {
+            max-width: 100%; /* 전체 너비로 설정 */
+            text-align: center; /* 텍스트 중앙 정렬 */
+            background: none; /* 배경 제거 */
+            border: none; /* 테두리 제거 */
+            color: #777; 
+            font-style: italic; 
+            margin: 10px 0;
         }
         .message-left { 
             background: #f1f1f1; 
-            float: left; 
             align-self: flex-start;
+            border-top-left-radius: 0;
         }
         .message-right { 
             background: #d1ffd1; 
-            float: right; 
             align-self: flex-end;
+            border-top-right-radius: 0;
         }
         .message-content {
             margin-bottom: 5px;
@@ -52,21 +73,28 @@
         }
         #messageForm { 
             display: flex; 
+            align-items: center;
             border-top: 1px solid #ccc; 
+            background-color: #ffffff;
+            padding: 10px 20px;
         }
         #messageForm input { 
             flex: 1; 
             padding: 10px; 
-            border: none; 
-            font-size: 1em; 
+            border: 1px solid #ccc; 
+            border-radius: 20px;
+            font-size: 1em;
+            margin-right: 10px;
+            outline: none;
         }
         #messageForm button { 
-            padding: 10px; 
+            padding: 10px 20px; 
             border: none; 
             background: #28a745; 
             color: white; 
             cursor: pointer; 
             font-size: 1em;
+            border-radius: 20px;
         }
         #messageForm button:hover { 
             background: #218838; 
@@ -76,41 +104,201 @@
             color: #777; 
             font-style: italic; 
             margin: 10px 0;
+            width: 100%;
+        }
+        /* 방 목록 스타일 */
+        #roomList {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+        }
+        #roomList li {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #ffffff;
+            transition: background-color 0.3s ease;
+        }
+        #roomList li:hover {
+            background-color: #e6e6e6;
+        }
+        /* 채팅방 생성 버튼 스타일 */
+        #createRoomButton {
+            padding: 10px 20px;
+            border: none;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        #createRoomButton:hover {
+            background: #0069d9;
+        }
+        /* 채팅방 나가기 버튼 스타일 */
+        #leaveRoomButton {
+            padding: 5px 10px;
+            border: none;
+            background: #dc3545;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9em;
+            border-radius: 20px;
+            align-self: flex-end;
+            margin-bottom: 10px;
+        }
+        #leaveRoomButton:hover {
+            background: #c82333;
+        }
+        /* 반응형 디자인 */
+        @media (max-width: 600px) {
+            #messageForm {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #messageInput {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            #sendButton {
+                width: 100%;
+            }
+            .message {
+                max-width: 80%;
+            }
         }
     </style>
 </head>
 <body>
-    <ul id="chat"></ul>
-    <form id="messageForm">
-        <input id="messageInput" autocomplete="off" placeholder="메시지를 입력하세요..." />
-        <button type="submit">보내기</button>
-    </form>
+    <!-- 방 선택 및 생성 UI -->
+    <div id="roomContainer" class="active">
+        <h2>채팅방 선택</h2>
+        <button id="createRoomButton">새 채팅방 생성</button>
+        <ul id="roomList">
+            <!-- 서버에서 동적으로 방 목록을 가져와 표시 -->
+        </ul>
+    </div>
+
+    <!-- 채팅 UI -->
+    <div id="chatContainer">
+        <button id="leaveRoomButton">채팅방 나가기</button>
+        <h2 id="currentRoomName">채팅방: </h2>
+        <ul id="chat"></ul>
+        <form id="messageForm">
+            <input id="messageInput" autocomplete="off" placeholder="메시지를 입력하세요..." />
+            <button type="submit">보내기</button>
+        </form>
+    </div>
 
     <!-- Socket.IO 클라이언트 라이브러리 -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
 
-        // 사용자 이름 설정
-        let username = '';
-        while (!username) {
-            username = prompt('사용자 이름을 입력하세요:');
-            if (username) {
-                socket.emit('set username', username);
-                console.log(`set username 이벤트 전송: ${username}`);
-            }
-        }
+        // 초기 UI 설정
+        const roomContainer = document.getElementById('roomContainer');
+        const chatContainer = document.getElementById('chatContainer');
+        const createRoomButton = document.getElementById('createRoomButton');
+        const roomList = document.getElementById('roomList');
+        const currentRoomName = document.getElementById('currentRoomName');
+        const leaveRoomButton = document.getElementById('leaveRoomButton');
 
         const form = document.getElementById('messageForm');
         const input = document.getElementById('messageInput');
         const chat = document.getElementById('chat');
 
+        let currentRoom = '';
+
+        // 사용자 이름 설정
+        let username = '';
+        while (!username) {
+            username = prompt('사용자 이름을 입력하세요:');
+            if (username) {
+                console.log(`사용자 이름 설정: ${username}`);
+            }
+        }
+
+        // 방 생성 버튼 클릭 시
+        createRoomButton.addEventListener('click', () => {
+            const room = prompt('생성할 채팅방 이름을 입력하세요:');
+            if (room) {
+                joinRoom(room);
+                // 서버에 새로운 방 생성 요청
+                socket.emit('create room', room);
+            }
+        });
+
+        // 방 목록 클릭 시 해당 방에 참여
+        roomList.addEventListener('click', (e) => {
+            if (e.target && e.target.nodeName === 'LI') {
+                const room = e.target.getAttribute('data-room');
+                if (room) {
+                    joinRoom(room);
+                }
+            }
+        });
+
+        // 방에 참여하는 함수
+        function joinRoom(room) {
+            currentRoom = room;
+            currentRoomName.textContent = `채팅방: ${room}`;
+            chat.innerHTML = ''; // 기존 채팅 내용 초기화
+            roomContainer.classList.remove('active');
+            chatContainer.classList.add('active');
+            socket.emit('set username', { username: username, room: room });
+        }
+
+        // 방을 떠나는 함수
+        function leaveRoom() {
+            if (currentRoom) {
+                socket.emit('leave room');
+                currentRoom = '';
+                currentRoomName.textContent = '';
+                chat.innerHTML = '';
+                roomContainer.classList.add('active');
+                chatContainer.classList.remove('active');
+            }
+        }
+
+        // 방 떠나기 버튼 클릭 시
+        leaveRoomButton.addEventListener('click', () => {
+            const confirmLeave = confirm('정말로 채팅방을 나가시겠습니까?');
+            if (confirmLeave) {
+                leaveRoom();
+            }
+        });
+
+        // 방 목록을 서버에서 받아오기 위한 함수
+        function fetchRoomList() {
+            fetch('/rooms')
+                .then(response => response.json())
+                .then(rooms => {
+                    roomList.innerHTML = ''; // 기존 목록 초기화
+                    rooms.forEach(room => {
+                        const li = document.createElement('li');
+                        li.setAttribute('data-room', room);
+                        li.textContent = room;
+                        roomList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('방 목록 가져오기 오류:', error));
+        }
+
+        // 방 목록 초기 로드
+        window.addEventListener('load', () => {
+            fetchRoomList();
+        });
+
         // 메시지 전송
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            if (input.value) {
-                console.log(`보낼 메시지: ${input.value}`);
-                socket.emit('chat message', input.value);
+            const message = input.value.trim();
+            if (message) {
+                console.log(`보낼 메시지: ${message} in room ${currentRoom}`);
+                socket.emit('chat message', message);
                 input.value = '';
             }
         });
@@ -119,23 +307,31 @@
         socket.on('chat message', function(data) {
             console.log('수신한 chat message 데이터:', data);
             const item = document.createElement('li');
-            if (data.user === username) {
-                item.classList.add('message-right');
-                item.innerHTML = `
-                    <div class="message-content">
-                        <strong>나:</strong> ${data.message}
-                    </div>
-                    <div class="timestamp">${data.time}</div>
-                `;
+
+            // 시스템 메시지인지 사용자 메시지인지 구분
+            if (data.user === 'System') {
+                item.classList.add('notification');
+                item.textContent = data.message;
             } else {
-                item.classList.add('message-left');
-                item.innerHTML = `
-                    <div class="message-content">
-                        <strong style="color: ${data.color};">${data.user}:</strong> ${data.message}
-                    </div>
-                    <div class="timestamp">${data.time}</div>
-                `;
+                if (data.user === username) {
+                    item.classList.add('message-right');
+                    item.innerHTML = `
+                        <div class="message-content">
+                            <strong>나:</strong> ${data.message}
+                        </div>
+                        <div class="timestamp">${data.time}</div>
+                    `;
+                } else {
+                    item.classList.add('message-left');
+                    item.innerHTML = `
+                        <div class="message-content">
+                            <strong style="color: ${data.color};">${data.user}:</strong> ${data.message}
+                        </div>
+                        <div class="timestamp">${data.time}</div>
+                    `;
+                }
             }
+
             chat.appendChild(item);
             chat.scrollTop = chat.scrollHeight;
         });
@@ -151,13 +347,22 @@
         });
 
         // 사용자가 떠났을 때 알림
-        socket.on('user left', function(user) {
-            console.log('수신한 user left 데이터:', user);
+        socket.on('user left', function(data) { // data 객체로 변경
+            console.log('수신한 user left 데이터:', data);
             const item = document.createElement('li');
             item.classList.add('notification');
-            item.textContent = `${user}님이 채팅을 떠났습니다.`;
+            item.textContent = `${data.user}님이 채팅을 떠났습니다.`;
             chat.appendChild(item);
             chat.scrollTop = chat.scrollHeight;
+        });
+
+        // 새로운 방이 추가되었을 때 목록 업데이트
+        socket.on('new room', function(room) {
+            console.log('새로운 방이 생성되었습니다:', room);
+            const li = document.createElement('li');
+            li.setAttribute('data-room', room);
+            li.textContent = room;
+            roomList.appendChild(li);
         });
     </script>
 </body>
