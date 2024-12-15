@@ -15,8 +15,8 @@ app.use(express.static(__dirname + '/public'));
 const users = {};
 const userColors = {};
 
-// 현재 채팅방 목록을 저장하기 위한 객체 (간단한 예시)
-const chatRooms = new Set(['방1', '방2', '방3']); // 초기 방 목록
+// 현재 채팅방 목록을 저장하기 위한 객체 (초기 방 목록 설정)
+const chatRooms = new Set(['방1', '방2', '방3']);
 
 // 랜덤 색상 생성 함수
 function getRandomColor() {
@@ -50,9 +50,6 @@ io.on('connection', (socket) => {
             chatRooms.add(room);
             io.emit('new room', room); // 모든 클라이언트에게 새로운 방이 추가되었음을 알림
         }
-
-        // 해당 방의 지난 메시지를 로드하여 클라이언트에 전송 (옵션: 메시지 저장 기능과 연동 시 필요)
-        // 현재 구현에서는 메시지 저장 기능을 제외하였습니다.
     });
 
     // 메시지 수신 시 룸 기준으로 브로드캐스트
@@ -68,19 +65,10 @@ io.on('connection', (socket) => {
             time: timestamp
         };
 
-        console.log(`chat message 이벤트 수신: ${messageData} in room ${socket.room}`);
+        console.log(`chat message 이벤트 수신: ${JSON.stringify(messageData)} in room ${socket.room}`);
 
         // 메시지를 소켓이 속한 룸으로 브로드캐스트
         io.to(socket.room).emit('chat message', messageData);
-    });
-
-    // 새로운 방 생성 요청 처리
-    socket.on('create room', (room) => {
-        if (room && !chatRooms.has(room)) {
-            chatRooms.add(room);
-            io.emit('new room', room); // 모든 클라이언트에게 새로운 방이 추가되었음을 알림
-            console.log(`새 채팅방 생성: ${room}`);
-        }
     });
 
     // 방 떠나기 요청 처리
