@@ -50,7 +50,7 @@ db.run(sql, (err) => {
   });
 });
 
-// 모든 사용자 조회 API http://localhost:3000/api/users 접속
+// 모든 사용자 조회 API http://localhost:3000/api/users 
 app.get("/api/users", (req, res) => {
   const sql = `SELECT * FROM users`;
   db.all(sql, [], (err, rows) => {
