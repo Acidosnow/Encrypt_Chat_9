@@ -13,7 +13,6 @@ register_btn.addEventListener("click", (e) => { // 'submit'에서 'click'으로 
   console.log(username.value + " " + userid.value + " " + userpw.value);
 });
 
-
 const userpw_R = document.getElementById("userpw_R"); // 비밀번호 재확인 입력 필드 추가
 
 register_btn.addEventListener("click", (e) => {
