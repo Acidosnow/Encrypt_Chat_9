@@ -13,12 +13,12 @@
     <h2>로그인</h2>
     <form action="/home/home.html">
       <div class="textbox">
-        <input type="text" placeholder="사용자 아이디" required />
+        <input id="userid" type="text" placeholder="사용자 아이디" required /> <!-- id 추가 -->
       </div>
       <div class="textbox">
-        <input type="password" placeholder="비밀번호" required />
+        <input id="userpw" type="password" placeholder="비밀번호" required /> <!-- id 추가 -->
       </div>
-      <button class="login-btn" type="submit">로그인</button>
+      <button id="login-btn" class="login-btn" type="submit">로그인</button> <!-- id 추가 -->
     </form>
     <div class="register-box">
       <form action="/public/login/register.html">
