@@ -1,67 +1,246 @@
-* {
+/* CSS 변수 */
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #dc3545;
+  --background-color: #eef2f3;
+  --chat-background: #fff;
+  --message-left-bg: #f1f1f1;
+  --message-right-bg: #d1ffd1;
+  --text-color: #333;
+  --notification-color: #777;
+}
+
+/* 기본 스타일 */
+body {
+  font-family: "Roboto", sans-serif;
   margin: 0;
   padding: 0;
-  text-decoration: none;
-}
-
-#header h1 {
-  size: 100px;
-  color: white;
-  text-align: center;
-}
-
-#header {
-  display: block;
-  position: fixed;
-  background-color: darkgray;
-  top: 0;
-  width: 100%;
-  height: 45px;
-}
-
-#chatlog {
-  display: block;
-  background-color: white;
-  padding-top: 45px;
-}
-
-#messages {
-  display: block;
-  background-color: azure;
-  font-size: 40px;
-}
-
-#form {
-  background-color: rgba(0,0,0,0.15);
-  padding: 0.25rem;
   display: flex;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3rem;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+#chatContainer,
+#roomContainer {
+  display: none; /* 초기에는 숨김 */
+  flex-direction: column;
+  flex: 1;
+  padding: 20px;
   box-sizing: border-box;
-  backdrop-filter: blur(10px);
 }
-
-#chat-input {
-  border: none;
-  padding: 0 1rem;
-  flex-grow: 1;
-  border-radius: 2rem;
-  margin: 0.25rem;
+#roomContainer.active,
+#chatContainer.active {
+  display: flex; /* 활성화 시 표시 */
 }
-
-#chat-input:focus {
+#chat {
+  list-style: none;
+  margin: 0;
+  padding: 10px;
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background-color: var(--chat-background);
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+#chat li {
+  padding: 10px;
+  max-width: 60%;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
+}
+/* 시스템 알림 메시지 스타일 */
+#chat li.notification {
+  max-width: 100%; /* 전체 너비로 설정 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  background: none; /* 배경 제거 */
+  border: none; /* 테두리 제거 */
+  color: var(--notification-color);
+  font-style: italic;
+  margin: 10px 0;
+}
+.message-left {
+  background: var(--message-left-bg);
+  align-self: flex-start;
+  border-top-left-radius: 0;
+  position: relative;
+}
+.message-right {
+  background: var(--message-right-bg);
+  align-self: flex-end;
+  border-top-right-radius: 0;
+  position: relative;
+}
+/* 메시지 버블 화살표 */
+.message-left::after,
+.message-right::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+.message-left::after {
+  left: -10px;
+  top: 10px;
+  border-width: 5px 10px 5px 0;
+  border-color: transparent var(--message-left-bg) transparent transparent;
+}
+.message-right::after {
+  right: -10px;
+  top: 10px;
+  border-width: 5px 0 5px 10px;
+  border-color: transparent transparent transparent var(--message-right-bg);
+}
+.message-content {
+  font-size: 1em;
+}
+.timestamp {
+  font-size: 0.8em;
+  color: #555;
+  text-align: right;
+}
+#messageForm {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #ccc;
+  background-color: #ffffff;
+  padding: 10px 20px;
+}
+#messageForm input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 1em;
+  margin-right: 10px;
   outline: none;
 }
-
-#form > button {
-  background: darkgray;
+#messageForm button {
+  padding: 10px 20px;
   border: none;
-  padding: 0 1rem;
-  margin: 0.25rem;
-  border-radius: 3px;
-  outline: none;
+  background: var(--primary-color);
   color: white;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 20px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+#messageForm button:hover {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+.notification {
+  text-align: center;
+  color: var(--notification-color);
+  font-style: italic;
+  margin: 10px 0;
+  width: 100%;
+}
+/* 방 목록 스타일 */
+#roomList {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+}
+#roomList li {
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #ffffff;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+#roomList li:hover {
+  background-color: #e6e6e6;
+}
+/* 채팅방 생성 버튼 스타일 */
+#createRoomButton {
+  padding: 10px 20px;
+  border: none;
+  background: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+#createRoomButton:hover {
+  background: #0056b3;
+}
+/* 채팅방 나가기 버튼 스타일 */
+#leaveRoomButton {
+  padding: 5px 10px;
+  border: none;
+  background: var(--secondary-color);
+  color: white;
+  cursor: pointer;
+  font-size: 0.9em;
+  border-radius: 20px;
+  align-self: flex-end;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+#leaveRoomButton:hover {
+  background: #c82333;
+}
+/* 프로필 이미지 스타일 */
+.profile-img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+/* 로딩 스피너 스타일 */
+#loadingSpinner {
+  text-align: center;
+  color: var(--notification-color);
+  font-style: italic;
+}
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* 반응형 디자인 */
+@media (max-width: 600px) {
+  #messageForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #messageInput {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  #sendButton {
+    width: 100%;
+  }
+  .message {
+    max-width: 80%;
+  }
+  #createRoomButton,
+  #leaveRoomButton {
+    width: 100%;
+    justify-content: center;
+  }
 }

@@ -4,12 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home</title>
+    <link rel="stylesheet" href="./home-style.css" />
   </head>
   <body>
-    <h1>Home</h1>
-    <form id="form" action="/public/chat/chat.html">
-      <button id="button">Start</button>
+    <h1>홈</h1>
+    <form id="form" action="/chat">
+      <button id="button">채팅 시작</button>
     </form>
+
+    <div>
+      <h3>온라인 사용자</h3>
+      <ul id="online-user-list"></ul>
+      <!-- 온라인 사용자 목록을 표시할 요소 -->
+    </div>
+
+    <!-- 로그아웃 버튼 추가 -->
+    <button id="logout-btn">로그아웃</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
     <script src="./home.js"></script>

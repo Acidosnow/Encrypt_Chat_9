@@ -1,25 +1,53 @@
+<!-- public/index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Socket</title>
+    <title>Socket.IO 채팅방</title>
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <link rel="stylesheet" href="/chat/chat-style.css" />
   </head>
   <body>
-    <header id="header">
-      <h1>Socket.io Chat</h1>
-    </header>
-    <section id="chatlog">
-      <ul id="messages"></ul>
-    </section>
-    <section id="textbox">
-      <form id="form" action="">
-        <input id="chat-input" autocomplete="off" /><button>Send</button>
-      </form>
-    </section>
+    <!-- 방 선택 및 생성 UI -->
+    <div id="roomContainer" class="active">
+      <h2>채팅방 선택</h2>
+      <button id="createRoomButton">
+        <i class="fas fa-plus"></i> 새 채팅방 생성
+      </button>
+      <ul id="roomList">
+        <!-- 서버에서 동적으로 방 목록을 가져와 표시 -->
+        <li id="loadingSpinner">로딩 중...</li>
+      </ul>
+    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <!-- 채팅 UI -->
+    <div id="chatContainer">
+      <button id="leaveRoomButton">
+        <i class="fas fa-sign-out-alt"></i> 채팅방 나가기
+      </button>
+      <h2 id="currentRoomName">채팅방:</h2>
+      <ul id="chat"></ul>
+      <form id="messageForm">
+        <input
+          id="messageInput"
+          autocomplete="off"
+          placeholder="메시지를 입력하세요..."
+        />
+        <button type="submit"><i class="fas fa-paper-plane"></i> 보내기</button>
+      </form>
+    </div>
+
+    <!-- Socket.IO 클라이언트 라이브러리 -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/chat/chat.js"></script>
   </body>
 </html>

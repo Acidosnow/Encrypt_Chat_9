@@ -1,34 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="/login/login-style.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
-  <link rel="stylesheet" href="/login/login-style.css" />
-</head>
-
-<body>
-  <div class="container">
-    <h2>로그인</h2>
-    <form action="/home/home.html">
-      <div class="textbox">
-        <input type="text" placeholder="사용자 아이디" required />
-      </div>
-      <div class="textbox">
-        <input type="password" placeholder="비밀번호" required />
-      </div>
-      <button class="login-btn" type="submit">로그인</button>
-    </form>
-    <div class="register-box">
-      <form action="/public/login/register.html">
-        <button id="register-btn" class="register-btn">회원가입</button>
+  <body>
+    <div class="container">
+      <h2>로그인</h2>
+      <form action="">
+        <div class="textbox">
+          <input id="userid" type="text" placeholder="사용자 아이디" required />
+        </div>
+        <div class="textbox">
+          <input id="userpw" type="password" placeholder="비밀번호" required />
+        </div>
+        <button id="login-btn" class="login-btn" type="submit">로그인</button>
       </form>
+      <div class="register-box">
+        <form action="/login-register">
+          <button id="register-btn" class="register-btn">회원가입</button>
+        </form>
+      </div>
     </div>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
-  <script src="/login/login.js"></script>
-</body>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script src="/login/login.js"></script>
+  </body>
 </html>
