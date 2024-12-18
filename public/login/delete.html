@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>회원탈퇴</title>
+    <link rel="stylesheet" href="/login/delete-style.css" />
+</head>
+
+<body>
+    <section class="container">
+        <h2>회원탈퇴</h2>
+        <p>회원탈퇴를 원하시면 사용자 아이디와 비밀번호를 입력하세요.</p>
+        <div class="textbox">
+            <input id="userid" type="text" placeholder="사용자 아이디" required />
+        </div>
+        <div class="textbox">
+            <input id="userpw" type="password" placeholder="비밀번호" required />
+        </div>
+        <button id="delete-btn" class="delete-btn">회원탈퇴</button>
+        <p id="message"></p>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script src="/login/delete.js"></script>
+</body>
+
+</html>

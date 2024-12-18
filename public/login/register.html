@@ -1,34 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register</title>
-    <link rel="stylesheet" href="/login/register-style.css" />
-  </head>
-  <body>
-    <section class="container">
-      <h2>회원가입</h2>
-      <form action="">
-        <div class="textbox">
-          <input id="username" type="text" placeholder="사용자 이름" required />
-        </div>
-        <div class="textbox">
-          <input id="userid" type="text" placeholder="사용자 아이디" required />
-        </div>
-        <div class="textbox">
-          <input
-            id="userpw"
-            type="password"
-            placeholder="사용자 비밀번호"
-            required
-          />
-        </div>
-        <button id="register-btn" class="register-btn">회원가입</button>
-      </form>
-    </section>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
-    <script src="/login/register.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <link rel="stylesheet" href="/login/register-style.css" />
+</head>
+
+<body>
+  <section class="container">
+    <h2>회원가입</h2>
+    <form action="">
+      <div class="textbox">
+        <input id="username" type="text" placeholder="사용자 이름" required />
+      </div>
+      <div class="textbox">
+        <input id="userid" type="text" placeholder="사용자 아이디" required />
+      </div>
+      <div class="textbox">
+        <input id="userpw" type="password" placeholder="사용자 비밀번호" required />
+      </div>
+      <div class="textbox">
+        <input id="userpw_R" type="password" placeholder="비밀번호 재확인" required />
+      </div>
+      <button id="register-btn" class="register-btn">회원가입</button>
+      <a href="/public/login/delete.html" class="delete-account-btn">회원탈퇴</a>
+    </form>
+  </section>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+  <script src="/login/register.js"></script>
+</body>
+
 </html>
