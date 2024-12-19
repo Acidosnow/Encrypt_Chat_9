@@ -57,8 +57,14 @@ app.post("/login", (req, res) => {
         maxAge: 3600000,
       });
 
-      activeSessions[sessionToken] = { userId: row.id, username: row.username };
-      activeUsers[row.username] = { id: row.id, username: row.username };
+      activeSessions[sessionToken] = {
+        userId: row.userid,
+        username: row.username,
+      };
+      activeUsers[row.username] = {
+        userId: row.userid,
+        username: row.username,
+      };
 
       io.emit("updateUsers", Object.values(activeUsers)); // 모든 클라이언트에 전송
 
@@ -107,21 +113,6 @@ app.get("/check-login", (req, res) => {
   res.json({ loggedIn: true, user: activeSessions[token] });
 });
 
-// 유저 로그인 상태 확인
-app.get("/check-login/:userid", (req, res) => {
-  const { userid } = req.params;
-
-  const session = Object.values(activeSessions).find(
-    (session) => session.userId === parseInt(userid)
-  );
-
-  if (session) {
-    res.json({ loggedIn: true, username: session.username });
-  } else {
-    res.json({ loggedIn: false });
-  }
-});
-
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -150,6 +141,7 @@ sql = `CREATE TABLE IF NOT EXISTS rooms(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT UNIQUE NOT NULL,
   creator_id INTEGER,
+  addr TEXT UNIQUE NOT NULL,
   FOREIGN KEY (creator_id) REFERENCES users(id)
 )`;
 
@@ -164,6 +156,22 @@ sql = `CREATE TABLE IF NOT EXISTS user_rooms(
   FOREIGN KEY (room_id) REFERENCES rooms(id),
   PRIMARY KEY (user_id, room_id)
 )`;
+
+db.run(sql, (err) => {
+  if (err) return console.error(err.message);
+});
+
+// 채팅 목록 테이블 생성
+sql = `CREATE TABLE IF NOT EXISTS chat_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_id INTEGER,
+    user_id INTEGER,
+    username TEXT,
+    message TEXT,
+    timestamp DATETIME DEFAULT (datetime('now', 'utc')),
+    FOREIGN KEY (room_id) REFERENCES rooms(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);`;
 
 db.run(sql, (err) => {
   if (err) return console.error(err.message);
@@ -251,9 +259,55 @@ io.on("connection", (socket) => {
   console.log("Client connected: " + socket.id);
 
   // chat message 이벤트 수신
-  socket.on("chat message", (msg) => {
-    io.emit("chat message", msg);
-    console.log("message: " + msg);
+  socket.on("chat message", (msg, username, roomname) => {
+    const timestamp = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    db.get(
+      `SELECT id, addr FROM rooms WHERE name = ?`,
+      [roomname],
+      (err, row) => {
+        if (err) {
+          console.error(err.message);
+        }
+        if (row) {
+          const roomId = row.id;
+          const addr = row.addr;
+
+          const messageData = {
+            user: username,
+            message: msg,
+            time: timestamp,
+          };
+          io.to(addr).emit("chat message", messageData);
+          // NEW
+          db.get(
+            `SELECT id FROM users WHERE username = ?`,
+            [username],
+            (err, userRow) => {
+              if (err) {
+                console.error(err.message);
+                return;
+              }
+              if (userRow) {
+                const userId = userRow.id;
+
+                db.run(
+                  `INSERT INTO chat_logs (room_id, user_id, username, message, timestamp)
+              VALUES (?, ?, ?, ?, datetime('now','utc'))`,
+                  [roomId, userId, username, msg],
+                  (err) => {
+                    if (err) console.error("채팅 로그 저장 실패:", err.message);
+                  }
+                );
+              }
+            }
+          );
+          ////
+        }
+      }
+    );
   });
 
   // 회원가입 이벤트 수신
@@ -361,6 +415,167 @@ io.on("connection", (socket) => {
   // 로그인 중인 유저 목록 요청 수신
   socket.on("LoggedinUser", () => {
     socket.emit("updateUsers", Object.values(activeUsers));
+  });
+
+  socket.on("duplicate roomname", (roomname, callback) => {
+    db.get(`SELECT id FROM rooms WHERE name = ?`, [roomname], (err, row) => {
+      if (err) {
+        console.error(err.message);
+      }
+      //console.log(row);
+      if (row) {
+        console.log(`Room name '${roomname}' duplicated`);
+        callback({
+          success: false,
+          message: "해당 이름의 방이 이미 존재합니다!",
+        });
+      } else {
+        callback({ success: true });
+      }
+    });
+  });
+
+  socket.on("create room", (param, callback) => {
+    const userId = param.userId;
+    const roomname = param.roomname;
+    const addr = param.token;
+    //console.log(typeof userId, roomname, addr);
+    db.get(`SELECT id FROM users WHERE userid = ?`, [userId], (err, row) => {
+      //console.log("Room create");
+      if (err) {
+        console.error(err.message);
+        return;
+      }
+      //console.log(row);
+      if (row) {
+        const Id = row.id;
+        db.run(
+          `INSERT OR IGNORE INTO rooms(name, creator_id, addr) VALUES (?, ?, ?)`,
+          [roomname, Id, addr],
+          (err) => {
+            if (err) {
+              callback({ success: false, message: "방 생성 실패" });
+              console.error(err.message);
+            } else {
+              callback({ success: true, addr });
+            }
+          }
+        );
+      } else console.log("not found");
+    });
+  });
+
+  // 채팅방에 참여
+  socket.on("join room", async (room, userid, username) => {
+    // Room 고유의 주소(token)로 클라이언트 참여
+    db.get(`SELECT id, addr FROM rooms WHERE name = ?`, [room], (err, row) => {
+      if (err) {
+        console.error(err.message);
+        return;
+      }
+      if (row) {
+        const roomId = row.id;
+        const addr = row.addr;
+
+        // 클라이언트를 방에 참여
+        socket.join(addr);
+        // 참여 알림
+        io.to(addr).emit("user joined", { user: username });
+
+        // 채팅 로그 조회
+        db.all(
+          `SELECT username, message, datetime(timestamp, 'localtime') AS timestamp
+          FROM chat_logs
+          WHERE room_id = ?
+          ORDER BY timestamp ASC`,
+          [roomId],
+          (err, logs) => {
+            if (err) {
+              console.error("채팅 로그 불러오기 실패:", err.message);
+              return;
+            }
+
+            const formattedLogs = logs.map((log) => ({
+              username: log.username,
+              message: log.message,
+              timestamp: log.timestamp,
+            }));
+            // 이전 채팅 로그를 클라이언트로 전송
+            socket.emit("load previous messages", formattedLogs);
+          }
+        );
+      }
+    });
+
+    // 유저가 참여한 채팅방 리스트에 추가
+    db.get(`SELECT id FROM rooms WHERE name = ?`, [room], (err, row) => {
+      if (err) {
+        console.error(err.message);
+      }
+      if (row) {
+        const roomid = row.id;
+        db.get(
+          `SELECT id FROM users WHERE userid = ?`,
+          [userid],
+          (err, row) => {
+            if (err) {
+              console.error(err.message);
+            }
+            if (row) {
+              const userid = row.id;
+              db.run(
+                `INSERT OR IGNORE INTO user_rooms(user_id, room_id, joined_at) VALUES(?,?,CURRENT_TIMESTAMP)`,
+                [userid, roomid],
+                (err) => {
+                  if (err) console.error("user_rooms 삽입 실패");
+                }
+              );
+            } else console.log("유저가 존재하지 않음");
+          }
+        );
+      } else console.log("채팅방이 존재하지 않음");
+    });
+  });
+
+  socket.on("leave room", (roomname, username) => {
+    db.get(`SELECT addr FROM rooms WHERE name = ?`, [roomname], (err, row) => {
+      if (err) {
+        console.error(err.message);
+      }
+      if (row) {
+        const addr = row.addr;
+        //console.log(addr);
+
+        socket.leave(addr);
+
+        io.to(addr).emit("user left", { user: username });
+      }
+    });
+  });
+
+  //복호화시 비밀번호 검증
+  socket.on("verify password", (userid, userpw) => {
+    const sql = `SELECT * FROM users WHERE userid = ?`;
+    db.get(sql, [userid], (err, row) => {
+      if (err) {
+        console.error(err.message);
+        socket.emit("password verification result", {
+          success: false,
+          message: "서버 오류",
+        });
+        return;
+      }
+      if (row && row.password === userpw) {
+        // 비밀번호가 일치하는 경우
+        socket.emit("password verification result", { success: true });
+      } else {
+        // 비밀번호가 일치하지 않거나 사용자 없음
+        socket.emit("password verification result", {
+          success: false,
+          message: "사용자 이름 또는 비밀번호가 잘못되었습니다.",
+        });
+      }
+    });
   });
 
   // Client 연결 해제

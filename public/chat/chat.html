@@ -44,8 +44,34 @@
         />
         <button type="submit"><i class="fas fa-paper-plane"></i> 보내기</button>
       </form>
-    </div>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          margin-top: 15px;
+          margin-bottom: 20px;
+        "
+      >
+        <div style="margin-right: 30px">
+          <input type="text" id="secretKey" placeholder="비밀 키 입력" />
+          <input
+            type="text"
+            id="dataToEncrypt"
+            placeholder="암호화할 데이터 입력"
+          />
+          <button type="button" id="encryptButton">암호화 전송</button>
+          <div id="encryptedResult"></div>
+        </div>
 
+        <div>
+          <input type="text" id="dataToDecrypt" placeholder="복호화 키 입력" />
+          <button type="button" id="decryptButton">복호화</button>
+          <div id="decryptedResult"></div>
+        </div>
+      </div>
+    </div>
+    <!--crypto library 추가-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.js"></script>
     <!-- Socket.IO 클라이언트 라이브러리 -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="/chat/chat.js"></script>
